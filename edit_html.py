@@ -49,6 +49,41 @@ def criar_input(soup: BeautifulSoup, valor: str = "") -> Tag:
     return controle
 
 
+
+def substituir_tolerancia(soup: BeautifulSoup) -> None:
+    """Substitui Tolerance por campos editáveis de metadados do relatório."""
+    for animation in soup.select("div.animation"):
+        # Somente pares imediatamente dentro do cabeçalho de cada relatório,
+        # sem alterar os campos particulares das interferências.
+        pares = animation.find_all("span", class_="namevaluepair", recursive=False)
+        tolerancia = None
+        existentes = set()
+        for par in pares:
+            nome, _ = par_nome_valor(par)
+            if nome is None:
+                continue
+            chave = normalizar(nome.get_text(" ", strip=True))
+            if chave in {"data", "arquivo", "versao"}:
+                existentes.add(chave)
+            if chave in {"tolerance", "tolerancia"}:
+                tolerancia = par
+
+        if tolerancia is not None:
+            ponto = tolerancia
+            for titulo in ("Data", "Arquivo", "Versão"):
+                if normalizar(titulo) not in existentes:
+                    controle = soup.new_tag("input", attrs={
+                        "type": "text", "maxlength": "20", "size": "20",
+                        "class": "editavel metadado",
+                        "value": "", "aria-label": titulo,
+                    })
+                    novo = criar_par(soup, titulo, controle)
+                    ponto.insert_after(novo)
+                    ponto = novo
+            tolerancia.decompose()
+
+
+
 def transformar_campos(soup: BeautifulSoup, remover: list[str]) -> None:
     removidos = {normalizar(nome) for nome in remover}
 
@@ -138,6 +173,7 @@ h1,h2 {color:#172e4b;}
   background:white; color:#202d3c; box-sizing:border-box;}
 .descricao {width:min(520px, 55vw); min-height:65px; resize:vertical;}
 .curto {width:65px; text-transform:uppercase;}
+.metadado {width:210px; max-width:100%;}
 .prioridade {min-width:110px;}
 h4.clashobject {clear:both; margin:16px 0 8px; color:#172e4b;}
 .acoes {position:sticky; bottom:0; background:#f4f7fb; padding:16px;
@@ -245,6 +281,7 @@ def converter(entrada: Path, pasta: Path, saida: Path, remover: list[str]) -> tu
         if existente:
             existente.decompose()
 
+    substituir_tolerancia(soup)
     transformar_campos(soup, remover)
     qtd, faltando = incorporar_imagens(soup, pasta, entrada)
 
