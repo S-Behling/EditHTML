@@ -81,3 +81,51 @@ O programa agrupa as duas linhas pelo Nome (separadamente por aba), forma o par 
 **Descrição** preenche **Description** e **Quem altera** preenche **Responsável** (limitado a 3 caracteres no HTML). Caso apenas uma das linhas tenha os textos preenchidos, são utilizados os valores não vazios. Valores vazios não apagam conteúdo do HTML. Valores conflitantes entre as duas linhas, grupos incompletos ou repetição de pares com informações conflitantes não são aplicados automaticamente.
 
 Os cabeçalhos aceitos podem ser ajustados em `COLUNAS` no arquivo `preencher_descricoes.py`. A planilha XLSM é apenas lida; macros não são executadas.
+
+## Módulo 3 — processamento em lote
+
+O script `processar_lote.py` tem uma interface independente. Execute:
+
+```powershell
+git pull
+pip install -r requirements.txt
+python processar_lote.py
+```
+
+Coloque as pastas dos relatórios originais em `relatorios_entrada/`, com o arquivo HTML e sua pasta `_files` (imagens) lado a lado:
+
+```text
+relatorios_entrada/
+  ELE X HID/
+    ELE X HID.html
+    ELE X HID_files/
+      cd030001.jpg
+  ARQ X EST/
+    ARQ X EST.html
+    ARQ X EST_files/
+      imagem.jpg
+```
+
+Na interface, selecione **pasta de entrada**, **planilha XLSX/XLSM** e **pasta de saída**. O programa percorre as subpastas e cria dois arquivos para cada HTML original, preservando a hierarquia das pastas:
+
+```text
+relatorios_saida/
+  ELE X HID/
+    ELE X HID_editavel.html
+    ELE X HID_preenchido.html
+  ARQ X EST/
+    ARQ X EST_editavel.html
+    ARQ X EST_preenchido.html
+```
+
+A primeira etapa converte os campos e incorpora as imagens. A segunda cruza cada interferência com a planilha pelos **dois Element IDs** e preenche somente **Description** (Descrição) e **Responsável** (três primeiros caracteres de Quem altera?). Os campos Disciplina dos itens 1 e 2 ficam em branco para edição manual.
+
+São ignorados arquivos com nomes terminados em `_editavel` ou `_preenchido`. O programa informa por relatório quantas interferências foram preenchidas, quantas imagens foram incorporadas e possíveis erros. A planilha pode consolidar muitos relatórios.
+
+Também é possível executar sem abrir a interface:
+
+```powershell
+python processar_lote.py --entrada relatorios_entrada --planilha "D21 - Relatórios de Clash.xlsx" --saida relatorios_saida
+```
+
+Observação: em arquivos de muitas interferências, o processamento pode demorar porque cada HTML é processado separadamente. Os arquivos originais não são alterados.
