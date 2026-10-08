@@ -56,3 +56,27 @@ A interface utiliza **Tkinter**, normalmente incluído na instalação padrão d
 ## Campos do cabeçalho
 
 O campo **Tolerance/Tolerância** do cabeçalho de cada relatório é substituído por **Data**, **Arquivo 1**, **Arquivo 2** e **Versão**, cada um com caixa de texto editável de até **20 caracteres**. Os valores são preservados ao usar o botão **Salvar HTML**. O funcionamento também vale para a interface gráfica (`python interface.py`).
+
+## Módulo independente: preenchimento de descrições pela planilha
+
+Inicie apenas este módulo (não precisa executar o conversor novamente):
+
+```powershell
+git pull
+python -m pip install -r requirements.txt
+python preencher_descricoes.py
+```
+
+Na janela, selecione o **HTML editável**, a **planilha Excel (.xlsx ou .xlsm)** e o destino do HTML preenchido.
+
+A planilha deve conter uma linha de cabeçalho com quatro colunas:
+
+| Element ID Item 1 | Element ID Item 2 | Descricao | Quem altera |
+|---|---|---|---|
+| 16997963 | 2942017 | Revisar posicionamento | ELE |
+
+A ordem dos dois IDs pode estar invertida entre a planilha e o HTML. O preenchimento só ocorre quando **os dois Element IDs** coincidirem. `Descricao` preenche `Description` e `Quem altera` preenche `Responsável` (até 3 caracteres, como previsto no relatório). IDs sem correspondência são preservados. Havendo linhas com o mesmo par e dados conflitantes, o módulo não substitui os valores desses registros; informa a quantidade no resumo. Células vazias não apagam dados existentes.
+
+Os nomes de cabeçalho aceitos podem ser personalizados na constante `COLUNAS` dentro de `preencher_descricoes.py`. A identificação do cabeçalho é feita em cada aba do arquivo.
+
+**Importante:** o formato de planilha suportado é Excel **.xlsx / .xlsm**. Arquivos XML genéricos não são interpretados por este módulo. A extensão .xlsm é lida sem executar macros.
