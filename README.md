@@ -52,3 +52,7 @@ python interface.py
 Use os três botões **Selecionar...** para escolher o HTML original, a pasta de imagens e o arquivo HTML de saída. Clique em **Gerar relatório editável**. O PDF é gerado posteriormente no próprio relatório, pelo botão **Salvar PDF** (caixa de impressão do navegador).
 
 A interface utiliza **Tkinter**, normalmente incluído na instalação padrão do Python. Não é necessário instalar pacote de interface via `pip`.
+
+## Campos do cabeçalho
+
+O campo **Tolerance/Tolerância** do cabeçalho de cada relatório é substituído por **Data**, **Arquivo** e **Versão**, cada um com caixa de texto editável de até **20 caracteres**. Os valores são preservados ao usar o botão **Salvar HTML**. O funcionamento também vale para a interface gráfica (`python interface.py`).
