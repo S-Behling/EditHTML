@@ -69,7 +69,7 @@ python preencher_descricoes.py
 
 Selecione o HTML editável, uma planilha Excel (.xlsx/.xlsm) e onde salvar o HTML preenchido.
 
-A planilha deve ter as colunas **Nome**, **Item**, **Element ID**, **Descrição** e **Quem altera**. Cada interferência ocupa duas linhas com o mesmo Nome, uma para Item 1 e outra para Item 2:
+A planilha deve ter as colunas **Nome**, **Item**, **Element ID**, **Descrição** e **Quem altera?** (ou **Disciplina responsável**). Cada interferência ocupa duas linhas com o mesmo Nome, uma para Item 1 e outra para Item 2:
 
 | Nome | Item | Element ID | Descrição | Quem altera |
 |---|---|---|---|---|
