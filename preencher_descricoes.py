@@ -168,24 +168,6 @@ def preencher_valor(soup: BeautifulSoup, par: Tag, valor: Tag, texto: str, *, te
         controle["value"] = texto[:3]
 
 
-def campos_disciplina(viewpoint: Tag):
-    """Localiza o campo Disciplina de Item 1 e Item 2 separadamente."""
-    campos = []
-    for titulo in viewpoint.find_all("h4", class_="clashobject"):
-        if normalizar(titulo.get_text(" ", strip=True)) not in ("item1", "item2"):
-            continue
-        for irmao in titulo.next_siblings:
-            if isinstance(irmao, Tag) and irmao.name == "h4" and "clashobject" in irmao.get("class", []):
-                break
-            if not isinstance(irmao, Tag) or "namevaluepair" not in irmao.get("class", []):
-                continue
-            rotulo, valor = nome_valor(irmao)
-            if rotulo and valor and normalizar(rotulo.get_text(" ", strip=True)) == "disciplina":
-                campos.append(valor)
-                break
-    return campos
-
-
 def atualizar_html(html: Path, planilha: Path, saida: Path):
     if html.resolve() == saida.resolve():
         raise ValueError("Escolha uma saída diferente do HTML original.")
@@ -215,9 +197,6 @@ def atualizar_html(html: Path, planilha: Path, saida: Path):
             preencher_valor(soup, viewpoint, campo_desc, descricao, textarea=True)
         if responsavel:
             preencher_valor(soup, viewpoint, campo_resp, responsavel, textarea=False)
-            # Quem altera? também preenche Disciplina nos dois itens.
-            for campo_disciplina in campos_disciplina(viewpoint):
-                preencher_valor(soup, viewpoint, campo_disciplina, responsavel, textarea=False)
         encontrados += 1
     saida.parent.mkdir(parents=True, exist_ok=True)
     saida.write_text(str(soup), encoding="utf-8")
