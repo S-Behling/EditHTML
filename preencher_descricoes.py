@@ -70,6 +70,7 @@ def carregar_planilha(caminho: Path):
     try:
         for indice_aba, aba in enumerate(wb.worksheets):
             colunas = None
+            nome_anterior = ""
             for linha in aba.iter_rows(values_only=True):
                 encontrado = localizar_cabecalho(linha)
                 if encontrado:
@@ -81,9 +82,14 @@ def carregar_planilha(caminho: Path):
                 def obter(campo):
                     i = colunas[campo]
                     return linha[i] if i < len(linha) else None
-                nome = str(obter("nome") or "").strip()
+                nome_celula = str(obter("nome") or "").strip()
                 item = id_elemento(obter("item"))
                 elemento = id_elemento(obter("id"))
+                # Células mescladas deixam Nome vazio na linha do Item 2.
+                # Propagar apenas em linhas de itens válidos, nunca em linhas de cabeçalho.
+                if nome_celula:
+                    nome_anterior = nome_celula
+                nome = nome_celula or nome_anterior
                 if not nome or item not in ("1", "2") or not elemento:
                     continue
                 grupo = grupos[(indice_aba, nome)]
