@@ -266,7 +266,8 @@ class Interface(tk.Tk):
             f"Interferências atualizadas: {resultado['atualizados']}\n"
             f"Sem correspondência: {resultado['sem_correspondencia']}\n"
             f"Com dados conflitantes na planilha: {resultado['ambiguos']}\n"
-            f"Sem IDs ou campos necessários: {resultado['sem_ids_ou_campos']}\\n"\n            f"Grupos incompletos ou conflitantes: {resultado['grupos_inconsistentes']}"
+            f"Sem IDs ou campos necessários: {resultado['sem_ids_ou_campos']}\n"
+            f"Grupos incompletos ou conflitantes: {resultado['grupos_inconsistentes']}"
         )
         self.status.set(mensagem)
         messagebox.showinfo("Concluído", mensagem)
