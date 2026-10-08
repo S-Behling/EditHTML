@@ -59,24 +59,25 @@ O campo **Tolerance/Tolerância** do cabeçalho de cada relatório é substituí
 
 ## Módulo independente: preenchimento de descrições pela planilha
 
-Inicie apenas este módulo (não precisa executar o conversor novamente):
+Execute:
 
 ```powershell
 git pull
-python -m pip install -r requirements.txt
+pip install -r requirements.txt
 python preencher_descricoes.py
 ```
 
-Na janela, selecione o **HTML editável**, a **planilha Excel (.xlsx ou .xlsm)** e o destino do HTML preenchido.
+Selecione o HTML editável, uma planilha Excel (.xlsx/.xlsm) e onde salvar o HTML preenchido.
 
-A planilha deve conter uma linha de cabeçalho com quatro colunas:
+A planilha deve ter as colunas **Nome**, **Item**, **Element ID**, **Descrição** e **Quem altera**. Cada interferência ocupa duas linhas com o mesmo Nome, uma para Item 1 e outra para Item 2:
 
-| Element ID Item 1 | Element ID Item 2 | Descricao | Quem altera |
-|---|---|---|---|
-| 16997963 | 2942017 | Revisar posicionamento | ELE |
+| Nome | Item | Element ID | Descrição | Quem altera |
+|---|---|---|---|---|
+| Clash1 | 1 | 16997963 | Ajustar tubulação | HID |
+| Clash1 | 2 | 2942017 | Ajustar tubulação | HID |
 
-A ordem dos dois IDs pode estar invertida entre a planilha e o HTML. O preenchimento só ocorre quando **os dois Element IDs** coincidirem. `Descricao` preenche `Description` e `Quem altera` preenche `Responsável` (até 3 caracteres, como previsto no relatório). IDs sem correspondência são preservados. Havendo linhas com o mesmo par e dados conflitantes, o módulo não substitui os valores desses registros; informa a quantidade no resumo. Células vazias não apagam dados existentes.
+O programa agrupa as duas linhas pelo Nome (separadamente por aba), forma o par de IDs e **procura esse par no HTML**, independentemente da ordem. A planilha pode conter registros de muitos relatórios HTML: os pares que não existem no arquivo selecionado são ignorados. A correspondência usa o **par completo de Element IDs**, não apenas um ID isolado.
 
-Os nomes de cabeçalho aceitos podem ser personalizados na constante `COLUNAS` dentro de `preencher_descricoes.py`. A identificação do cabeçalho é feita em cada aba do arquivo.
+**Descrição** preenche **Description** e **Quem altera** preenche **Responsável** (limitado a 3 caracteres no HTML). Caso apenas uma das linhas tenha os textos preenchidos, são utilizados os valores não vazios. Valores vazios não apagam conteúdo do HTML. Valores conflitantes entre as duas linhas, grupos incompletos ou repetição de pares com informações conflitantes não são aplicados automaticamente.
 
-**Importante:** o formato de planilha suportado é Excel **.xlsx / .xlsm**. Arquivos XML genéricos não são interpretados por este módulo. A extensão .xlsm é lida sem executar macros.
+Os cabeçalhos aceitos podem ser ajustados em `COLUNAS` no arquivo `preencher_descricoes.py`. A planilha XLSM é apenas lida; macros não são executadas.
