@@ -30,12 +30,13 @@ def id_elemento(valor):
     return s
 
 
-# Nomes aceitos nos cabeçalhos da planilha. Ajuste conforme necessário.
+# Cada interferência da planilha ocupa duas linhas, uma para cada Item.
 COLUNAS = {
-    "id1": ("Element ID Item 1", "ElementID Item 1", "Item 1 Element ID", "ID Item 1", "ElementID1"),
-    "id2": ("Element ID Item 2", "ElementID Item 2", "Item 2 Element ID", "ID Item 2", "ElementID2"),
-    "descricao": ("Descricao", "Descrição", "Description"),
-    "responsavel": ("Quem altera", "Responsavel", "Responsável"),
+    "nome": ("Nome",),
+    "item": ("Item",),
+    "id": ("Element ID",),
+    "descricao": ("Descrição", "Descricao"),
+    "responsavel": ("Quem altera",),
 }
 
 
@@ -44,50 +45,77 @@ def localizar_cabecalho(linha):
     indices = {}
     for campo, alternativas in COLUNAS.items():
         validos = {normalizar(nome) for nome in alternativas}
-        correspondencias = [i for i, nome in enumerate(nomes) if nome in validos]
-        if len(correspondencias) != 1:
+        posicoes = [i for i, nome in enumerate(nomes) if nome in validos]
+        if len(posicoes) != 1:
             return None
-        indices[campo] = correspondencias[0]
+        indices[campo] = posicoes[0]
     return indices
+
+
+def consolidar_valores(linhas):
+    """Obtém valores únicos e não vazios, sem escolher arbitrariamente conflitos."""
+    descricao = {desc for desc, _ in linhas if desc}
+    responsavel = {resp for _, resp in linhas if resp}
+    if len(descricao) > 1 or len(responsavel) > 1:
+        return None
+    return (next(iter(descricao), ""), next(iter(responsavel), ""))
 
 
 def carregar_planilha(caminho: Path):
     wb = load_workbook(caminho, read_only=True, data_only=True)
-    registros = defaultdict(set)
-    linhas = 0
+    # Chave: (aba, Nome). Cada registro é formado por Item=1 e Item=2.
+    grupos = defaultdict(lambda: {"1": set(), "2": set(), "valores": []})
+    linhas_validas = 0
     cabecalhos = 0
     try:
-        for aba in wb.worksheets:
-            cabecalho = None
+        for indice_aba, aba in enumerate(wb.worksheets):
+            colunas = None
             for linha in aba.iter_rows(values_only=True):
-                if cabecalho is None:
-                    encontrado = localizar_cabecalho(linha)
-                    if encontrado:
-                        cabecalho = encontrado
-                        cabecalhos += 1
+                encontrado = localizar_cabecalho(linha)
+                if encontrado:
+                    colunas = encontrado
+                    cabecalhos += 1
+                    continue
+                if colunas is None:
                     continue
                 def obter(campo):
-                    i = cabecalho[campo]
+                    i = colunas[campo]
                     return linha[i] if i < len(linha) else None
-                a, b = id_elemento(obter("id1")), id_elemento(obter("id2"))
-                if not a or not b:
+                nome = str(obter("nome") or "").strip()
+                item = id_elemento(obter("item"))
+                elemento = id_elemento(obter("id"))
+                if not nome or item not in ("1", "2") or not elemento:
                     continue
-                chave = tuple(sorted((a, b)))
-                descricao = str(obter("descricao") or "").strip()
-                responsavel = str(obter("responsavel") or "").strip()
-                registros[chave].add((descricao, responsavel))
-                linhas += 1
+                grupo = grupos[(indice_aba, nome)]
+                grupo[item].add(elemento)
+                desc = str(obter("descricao") or "").strip()
+                resp = str(obter("responsavel") or "").strip()
+                grupo["valores"].append((desc, resp))
+                linhas_validas += 1
     finally:
         wb.close()
+
     if cabecalhos == 0:
-        raise ValueError(
-            "Cabeçalhos não identificados na planilha. São necessárias as colunas "
-            "'Element ID Item 1', 'Element ID Item 2', 'Descricao' e 'Quem altera'. "
-            "Confira os nomes em COLUNAS no início do script."
-        )
-    unicos = {chave: next(iter(valores)) for chave, valores in registros.items() if len(valores) == 1}
+        raise ValueError("Cabeçalhos não encontrados. Esperado: Nome, Item, "
+                         "Element ID, Descrição e Quem altera.")
+
+    registros = defaultdict(set)
+    inconsistentes = 0
+    for grupo in grupos.values():
+        if len(grupo["1"]) != 1 or len(grupo["2"]) != 1:
+            inconsistentes += 1
+            continue
+        valor = consolidar_valores(grupo["valores"])
+        if valor is None:
+            inconsistentes += 1
+            continue
+        chave = tuple(sorted((next(iter(grupo["1"])), next(iter(grupo["2"])))))
+        registros[chave].add(valor)
+
+    unicos = {chave: next(iter(valores)) for chave, valores in registros.items()
+              if len(valores) == 1}
     ambiguos = {chave for chave, valores in registros.items() if len(valores) > 1}
-    return unicos, ambiguos, linhas
+    return unicos, ambiguos, linhas_validas, inconsistentes
 
 
 def nome_valor(par: Tag):
@@ -143,7 +171,7 @@ def preencher_valor(soup: BeautifulSoup, par: Tag, valor: Tag, texto: str, *, te
 def atualizar_html(html: Path, planilha: Path, saida: Path):
     if html.resolve() == saida.resolve():
         raise ValueError("Escolha uma saída diferente do HTML original.")
-    unicos, ambiguos, linhas = carregar_planilha(planilha)
+    unicos, ambiguos, linhas, inconsistentes = carregar_planilha(planilha)
     soup = BeautifulSoup(html.read_text(encoding="utf-8-sig"), "html.parser")
     encontrados = sem_correspondencia = ambiguidades = sem_ids = 0
     for viewpoint in soup.select("div.viewpoint"):
@@ -173,7 +201,7 @@ def atualizar_html(html: Path, planilha: Path, saida: Path):
     saida.parent.mkdir(parents=True, exist_ok=True)
     saida.write_text(str(soup), encoding="utf-8")
     return dict(atualizados=encontrados, sem_correspondencia=sem_correspondencia,
-                ambiguos=ambiguidades, sem_ids_ou_campos=sem_ids, linhas_planilha=linhas)
+                ambiguos=ambiguidades, sem_ids_ou_campos=sem_ids, linhas_planilha=linhas, grupos_inconsistentes=inconsistentes)
 
 
 class Interface(tk.Tk):
@@ -238,7 +266,7 @@ class Interface(tk.Tk):
             f"Interferências atualizadas: {resultado['atualizados']}\n"
             f"Sem correspondência: {resultado['sem_correspondencia']}\n"
             f"Com dados conflitantes na planilha: {resultado['ambiguos']}\n"
-            f"Sem IDs ou campos necessários: {resultado['sem_ids_ou_campos']}"
+            f"Sem IDs ou campos necessários: {resultado['sem_ids_ou_campos']}\\n"\n            f"Grupos incompletos ou conflitantes: {resultado['grupos_inconsistentes']}"
         )
         self.status.set(mensagem)
         messagebox.showinfo("Concluído", mensagem)
