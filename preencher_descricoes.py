@@ -36,7 +36,7 @@ COLUNAS = {
     "item": ("Item",),
     "id": ("Element ID",),
     "descricao": ("Descrição", "Descricao"),
-    "responsavel": ("Quem altera",),
+    "responsavel": ("Quem altera", "Quem altera?", "Disciplina responsável", "Disciplina responsavel"),
 }
 
 
