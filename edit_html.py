@@ -63,14 +63,14 @@ def substituir_tolerancia(soup: BeautifulSoup) -> None:
             if nome is None:
                 continue
             chave = normalizar(nome.get_text(" ", strip=True))
-            if chave in {"data", "arquivo", "versao"}:
+            if chave in {"data", "arquivo 1", "arquivo 2", "versao"}:
                 existentes.add(chave)
             if chave in {"tolerance", "tolerancia"}:
                 tolerancia = par
 
         if tolerancia is not None:
             ponto = tolerancia
-            for titulo in ("Data", "Arquivo", "Versão"):
+            for titulo in ("Data", "Arquivo 1", "Arquivo 2", "Versão"):
                 if normalizar(titulo) not in existentes:
                     controle = soup.new_tag("input", attrs={
                         "type": "text", "maxlength": "20", "size": "20",
