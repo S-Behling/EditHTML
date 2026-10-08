@@ -1,0 +1,10 @@
+# Não versionar os relatórios e imagens locais
+/relatorios_entrada/*
+!/relatorios_entrada/.gitkeep
+/relatorios_saida/*
+!/relatorios_saida/.gitkeep
+
+# Ambiente e arquivos temporários Python
+.venv/
+__pycache__/
+*.py[cod]
