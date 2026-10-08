@@ -40,3 +40,15 @@ A busca dos nomes dos campos ignora diferenças de maiúsculas/minúsculas e ace
 ## Requisitos e limitações
 
 Python 3.10+ e Beautiful Soup 4. Destinado a relatórios HTML do Navisworks com blocos `div.viewpoint` e campos `span.namevaluepair`. Imagens inexistentes serão listadas no terminal. Para exportar em PDF, use um navegador com suporte a impressão.
+
+## Interface gráfica (Windows / macOS / Linux)
+
+Execute após instalar as dependências:
+
+```bash
+python interface.py
+```
+
+Use os três botões **Selecionar...** para escolher o HTML original, a pasta de imagens e o arquivo HTML de saída. Clique em **Gerar relatório editável**. O PDF é gerado posteriormente no próprio relatório, pelo botão **Salvar PDF** (caixa de impressão do navegador).
+
+A interface utiliza **Tkinter**, normalmente incluído na instalação padrão do Python. Não é necessário instalar pacote de interface via `pip`.
